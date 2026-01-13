@@ -1,6 +1,7 @@
 modules = ["nodejs-20", "bash", "web"]
 [agent]
 expertMode = true
+integrations = ["javascript_database:1.0.0"]
 
 [nix]
 channel = "stable-25_05"
@@ -36,10 +37,6 @@ externalPort = 3001
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 46461
-externalPort = 3000
 
 [deployment]
 deploymentTarget = "static"

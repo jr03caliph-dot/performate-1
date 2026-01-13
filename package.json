@@ -13,7 +13,6 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/connect-pg-simple": "^7.0.3",
     "@types/cors": "^2.8.19",
@@ -25,7 +24,7 @@
     "connect-pg-simple": "^10.0.0",
     "cors": "^2.8.5",
     "drizzle-kit": "^0.31.8",
-    "drizzle-orm": "^0.45.0",
+    "drizzle-orm": "^0.45.1",
     "express": "^5.2.1",
     "express-session": "^1.18.2",
     "jspdf": "^2.5.1",
