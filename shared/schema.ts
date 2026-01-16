@@ -99,14 +99,6 @@ export const attendanceArchive = pgTable("attendance_archive", {
   originalMonth: text("original_month").notNull(),
 });
 
-export const voiceOfDirector = pgTable("voice_of_director", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  title: text("title").notNull(),
-  message: text("message").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
 export const classReasons = pgTable("class_reasons", {
   id: uuid("id").defaultRandom().primaryKey(),
   reason: text("reason").notNull(),
@@ -191,7 +183,6 @@ export type OtherTally = typeof otherTallies.$inferSelect;
 export type MorningBliss = typeof morningBliss.$inferSelect;
 export type Attendance = typeof attendance.$inferSelect;
 export type AttendanceArchive = typeof attendanceArchive.$inferSelect;
-export type VoiceOfDirector = typeof voiceOfDirector.$inferSelect;
 export type ClassReason = typeof classReasons.$inferSelect;
 export type PerformanceReason = typeof performanceReasons.$inferSelect;
 export type StarReason = typeof starReasons.$inferSelect;

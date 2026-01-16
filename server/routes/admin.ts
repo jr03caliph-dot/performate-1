@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { db } from "../db";
 import { 
-  voiceOfDirector, 
   classReasons, 
   performanceReasons, 
   starReasons,
@@ -19,42 +18,6 @@ import { requireAuth } from "../middleware/auth";
 const router = Router();
 
 router.use(requireAuth);
-
-router.get("/voice-of-director", async (req, res) => {
-  try {
-    const result = await db.select().from(voiceOfDirector).limit(1);
-    res.json(result[0] || null);
-  } catch (error) {
-    console.error("Error fetching voice of director:", error);
-    res.status(500).json({ error: "Failed to fetch voice of director" });
-  }
-});
-
-router.post("/voice-of-director", async (req, res) => {
-  try {
-    const { title, message } = req.body;
-
-    const existing = await db.select().from(voiceOfDirector).limit(1);
-
-    let result;
-    if (existing.length > 0) {
-      [result] = await db.update(voiceOfDirector)
-        .set({ title, message, updatedAt: new Date() })
-        .where(eq(voiceOfDirector.id, existing[0].id))
-        .returning();
-    } else {
-      [result] = await db.insert(voiceOfDirector).values({
-        title,
-        message,
-      }).returning();
-    }
-
-    res.json(result);
-  } catch (error) {
-    console.error("Error updating voice of director:", error);
-    res.status(500).json({ error: "Failed to update voice of director" });
-  }
-});
 
 router.get("/reasons/class", async (req, res) => {
   try {

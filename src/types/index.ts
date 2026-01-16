@@ -124,14 +124,6 @@ export const PRAYERS = [
 ] as const;
 
 
-export interface VoiceOfDirector {
-  id: string;
-  title: string;
-  message: string;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface Class {
   id: string;
   name: string;

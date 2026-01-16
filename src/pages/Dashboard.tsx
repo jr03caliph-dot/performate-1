@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { VoiceOfDirector } from '../types';
 
 interface DashboardStats {
   totalStudents: number;
@@ -25,12 +24,10 @@ export default function Dashboard() {
     topClass: ''
   });
   const [loading, setLoading] = useState(true);
-  const [directorMessage, setDirectorMessage] = useState<VoiceOfDirector | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchDashboardData();
-    fetchDirectorMessage();
   }, []);
 
   async function fetchDashboardData() {
@@ -76,15 +73,6 @@ export default function Dashboard() {
       console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function fetchDirectorMessage() {
-    try {
-      const data = await api.admin.getVoiceOfDirector();
-      setDirectorMessage(data);
-    } catch (error) {
-      console.error('Error fetching director message:', error);
     }
   }
 
@@ -219,81 +207,6 @@ export default function Dashboard() {
               <Bar dataKey="value" fill="#16a34a" />
             </BarChart>
           </ResponsiveContainer>
-        </div>
-      </div>
-
-      <div style={{
-        background: '#ffffff',
-        borderRadius: '12px',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-        overflow: 'hidden',
-        marginBottom: '40px'
-      }}>
-        <div style={{
-          background: '#16a34a',
-          padding: '16px 24px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px'
-        }}>
-          <span style={{ fontSize: '24px' }}>🎙️</span>
-          <h2 style={{
-            fontSize: '20px',
-            fontWeight: '600',
-            color: '#ffffff',
-            margin: 0
-          }}>
-            Voice of Director
-          </h2>
-        </div>
-
-        <div style={{ padding: '24px' }}>
-          {!directorMessage ? (
-            <div style={{
-              padding: '40px',
-              textAlign: 'center',
-              color: '#6b7280',
-              fontSize: '16px'
-            }}>
-              No messages from the Director yet.
-            </div>
-          ) : (
-            <div style={{
-              background: '#f9fafb',
-              borderRadius: '8px',
-              padding: '20px',
-              border: '1px solid #e5e7eb'
-            }}>
-              <h3 style={{
-                fontSize: '18px',
-                fontWeight: 'bold',
-                color: '#1f2937',
-                marginBottom: '12px'
-              }}>
-                {directorMessage.title}
-              </h3>
-              <p style={{
-                fontSize: '15px',
-                color: '#374151',
-                marginBottom: '12px',
-                whiteSpace: 'pre-wrap',
-                lineHeight: '1.6'
-              }}>
-                {directorMessage.message}
-              </p>
-              <p style={{
-                fontSize: '13px',
-                color: '#6b7280',
-                fontStyle: 'italic'
-              }}>
-                Posted on {new Date(directorMessage.created_at).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric'
-                })}
-              </p>
-            </div>
-          )}
         </div>
       </div>
 

@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
-import { VoiceOfDirector, Class, ClassReason, PerformanceReason } from '../types';
+import { ClassReason, PerformanceReason } from '../types';
 import { useClasses } from '../contexts/ClassesContext';
 
-type TabType = 'voice' | 'classes' | 'reasons' | 'mentors' | 'reset';
+type TabType = 'classes' | 'reasons' | 'mentors' | 'reset';
 
 export default function AdminPanel() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
-  const [activeTab, setActiveTab] = useState<TabType>('voice');
+  const [activeTab, setActiveTab] = useState<TabType>('classes');
   const [confirmText, setConfirmText] = useState('');
   const [resetType, setResetType] = useState<'classes' | 'morning_bliss' | 'attendance' | null>(null);
   const [mentors, setMentors] = useState<any[]>([]);
@@ -129,7 +129,7 @@ export default function AdminPanel() {
         marginBottom: '24px',
         flexWrap: 'wrap'
       }}>
-        {(['voice', 'classes', 'reasons', 'mentors', 'reset'] as TabType[]).map(tab => (
+        {(['classes', 'reasons', 'mentors', 'reset'] as TabType[]).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -144,7 +144,7 @@ export default function AdminPanel() {
               textTransform: 'capitalize'
             }}
           >
-            {tab === 'voice' ? 'Voice of Director' : tab}
+            {tab}
           </button>
         ))}
       </div>
@@ -155,14 +155,11 @@ export default function AdminPanel() {
         padding: '24px',
         boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
       }}>
-        {activeTab === 'voice' && <VoiceOfDirectorTab />}
         {activeTab === 'classes' && <ClassesTab />}
         {activeTab === 'reasons' && <ReasonsTab />}
         {activeTab === 'mentors' && <MentorsTab mentors={mentors} onRefresh={fetchMentors} />}
         {activeTab === 'reset' && (
           <ResetTab
-            resetType={resetType}
-            setResetType={setResetType}
             confirmText={confirmText}
             setConfirmText={setConfirmText}
             loading={loading}
@@ -170,107 +167,6 @@ export default function AdminPanel() {
           />
         )}
       </div>
-    </div>
-  );
-}
-
-function VoiceOfDirectorTab() {
-  const [title, setTitle] = useState('');
-  const [message, setMessage] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState('');
-
-  useEffect(() => {
-    fetchMessage();
-  }, []);
-
-  async function fetchMessage() {
-    try {
-      const data = await api.admin.getVoiceOfDirector();
-      if (data) {
-        setTitle(data.title || '');
-        setMessage(data.message || '');
-      }
-    } catch (error) {
-      console.error('Error fetching message:', error);
-    }
-  }
-
-  async function handleSave() {
-    setLoading(true);
-    try {
-      await api.admin.updateVoiceOfDirector({ title, message });
-      setStatus('Message saved successfully!');
-      setTimeout(() => setStatus(''), 3000);
-    } catch (error) {
-      console.error('Error saving message:', error);
-      setStatus('Error saving message');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  return (
-    <div>
-      <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '20px' }}>
-        Voice of Director
-      </h2>
-      <div style={{ marginBottom: '16px' }}>
-        <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>Title</label>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          style={{
-            width: '100%',
-            padding: '12px',
-            border: '2px solid #e5e7eb',
-            borderRadius: '8px'
-          }}
-        />
-      </div>
-      <div style={{ marginBottom: '16px' }}>
-        <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>Message</label>
-        <textarea
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          rows={6}
-          style={{
-            width: '100%',
-            padding: '12px',
-            border: '2px solid #e5e7eb',
-            borderRadius: '8px',
-            resize: 'vertical'
-          }}
-        />
-      </div>
-      {status && (
-        <div style={{
-          padding: '12px',
-          borderRadius: '8px',
-          marginBottom: '16px',
-          background: status.includes('Error') ? '#fee2e2' : '#d1fae5',
-          color: status.includes('Error') ? '#991b1b' : '#065f46'
-        }}>
-          {status}
-        </div>
-      )}
-      <button
-        onClick={handleSave}
-        disabled={loading}
-        style={{
-          padding: '12px 24px',
-          background: '#16a34a',
-          color: '#ffffff',
-          border: 'none',
-          borderRadius: '8px',
-          cursor: loading ? 'not-allowed' : 'pointer',
-          fontWeight: '600',
-          opacity: loading ? 0.6 : 1
-        }}
-      >
-        {loading ? 'Saving...' : 'Save Message'}
-      </button>
     </div>
   );
 }
@@ -417,13 +313,15 @@ function ReasonsTab() {
         id: r.id,
         reason: r.reason,
         tally: r.tally,
-        created_at: r.createdAt
+        created_at: r.createdAt,
+        updated_at: r.updatedAt
       })));
       setPerformanceReasons(perfData.map(r => ({
         id: r.id,
         reason: r.reason,
         tally: r.tally,
-        created_at: r.createdAt
+        created_at: r.createdAt,
+        updated_at: r.updatedAt
       })));
     } catch (error) {
       console.error('Error fetching reasons:', error);
@@ -659,15 +557,11 @@ function MentorsTab({ mentors, onRefresh }: { mentors: any[]; onRefresh: () => v
 }
 
 function ResetTab({
-  resetType,
-  setResetType,
   confirmText,
   setConfirmText,
   loading,
   onReset
 }: {
-  resetType: 'classes' | 'morning_bliss' | 'attendance' | null;
-  setResetType: (type: 'classes' | 'morning_bliss' | 'attendance' | null) => void;
   confirmText: string;
   setConfirmText: (text: string) => void;
   loading: boolean;
