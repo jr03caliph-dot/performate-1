@@ -17,12 +17,14 @@ export default function Reports() {
   const [reports, setReports] = useState<ClassReport[]>([]);
   const [selectedClass, setSelectedClass] = useState('ALL');
   const [loading, setLoading] = useState(true);
+  const [startDate, setStartDate] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]);
+  const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
     if (activeClasses.length > 0) {
       fetchReports();
     }
-  }, [activeClasses]);
+  }, [activeClasses, startDate, endDate]);
 
   async function fetchReports() {
     setLoading(true);
@@ -30,25 +32,23 @@ export default function Reports() {
       const classReports: ClassReport[] = [];
 
       for (const className of activeClasses) {
-        const students = await api.students.getAll(className);
+        const history = await api.tallies.getHistory({
+          class: className,
+          start_date: startDate,
+          end_date: endDate
+        });
 
-        if (!students || students.length === 0) continue;
-
-        const studentIds = students.map(s => s.id);
-
-        const [talliesData, starsData, otherTalliesData] = await Promise.all([
-          api.tallies.getAll(),
-          api.stars.getAll(),
-          api.tallies.getOther()
-        ]);
-
-        const filteredTallies = talliesData.filter(t => studentIds.includes(t.student_id));
-        const filteredStars = starsData.filter(s => studentIds.includes(s.student_id));
-        const filteredOtherTallies = otherTalliesData.filter(o => studentIds.includes(o.student_id));
-
-        const totalTallies = filteredTallies.reduce((sum, t) => sum + t.count, 0) || 0;
-        const totalStars = filteredStars.reduce((sum, s) => sum + s.count, 0) || 0;
-        const totalOtherTallies = filteredOtherTallies.reduce((sum, o) => sum + o.count, 0) || 0;
+        const totalTallies = history
+          .filter(h => h.type === 'class')
+          .reduce((sum, h) => sum + h.tallyValue, 0);
+          
+        const totalOtherTallies = history
+          .filter(h => h.type === 'performance')
+          .reduce((sum, h) => sum + h.tallyValue, 0);
+          
+        const totalStars = history
+          .filter(h => h.type === 'star')
+          .reduce((sum, h) => sum + Math.abs(h.tallyValue / 2), 0);
 
         const adjustedTallies = Math.max(0, totalTallies - (totalStars * 2));
         const netFine = (adjustedTallies * 10) + (totalOtherTallies * 10);
@@ -76,13 +76,11 @@ export default function Reports() {
       ? reports
       : reports.filter(r => r.class === selectedClass);
 
-    const month = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-
     doc.setFontSize(18);
     doc.text('Performance Report', 14, 20);
     doc.setFontSize(12);
     doc.text(`Class: ${selectedClass}`, 14, 30);
-    doc.text(`Month: ${month}`, 14, 37);
+    doc.text(`Period: ${startDate} to ${endDate}`, 14, 37);
 
     const tableData = filteredReports.map(report => [
       report.class,
@@ -100,7 +98,7 @@ export default function Reports() {
       headStyles: { fillColor: [22, 163, 74] }
     });
 
-    doc.save(`Performance_Report_${selectedClass}_${month}.pdf`);
+    doc.save(`Performance_Report_${selectedClass}_${startDate}_${endDate}.pdf`);
   }
 
   if (loading) {
@@ -123,27 +121,37 @@ export default function Reports() {
         padding: '24px',
         boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+        <div style={{ display: 'flex', gap: '24px', marginBottom: '24px', flexWrap: 'wrap' }}>
           <div>
-            <label style={{
-              display: 'block',
-              fontSize: '14px',
-              fontWeight: '500',
-              color: '#374151',
-              marginBottom: '8px'
-            }}>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+              Start Date
+            </label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              style={{ padding: '10px 16px', border: '2px solid #e5e7eb', borderRadius: '8px', outline: 'none' }}
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+              End Date
+            </label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              style={{ padding: '10px 16px', border: '2px solid #e5e7eb', borderRadius: '8px', outline: 'none' }}
+            />
+          </div>
+          <div style={{ flex: 1 }}>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
               Filter by Class
             </label>
             <select
               value={selectedClass}
               onChange={(e) => setSelectedClass(e.target.value)}
-              style={{
-                padding: '10px 16px',
-                border: '2px solid #e5e7eb',
-                borderRadius: '8px',
-                fontSize: '14px',
-                outline: 'none'
-              }}
+              style={{ width: '100%', padding: '10px 16px', border: '2px solid #e5e7eb', borderRadius: '8px', fontSize: '14px', outline: 'none' }}
             >
               <option value="ALL">All Classes</option>
               {activeClasses.map(cls => (
@@ -151,25 +159,26 @@ export default function Reports() {
               ))}
             </select>
           </div>
-
-          <button
-            onClick={downloadPDF}
-            style={{
-              padding: '12px 24px',
-              background: '#16a34a',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              transition: 'all 0.2s'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.background = '#15803d'}
-            onMouseLeave={(e) => e.currentTarget.style.background = '#16a34a'}
-          >
-            📥 Download PDF
-          </button>
+          <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+            <button
+              onClick={downloadPDF}
+              style={{
+                padding: '12px 24px',
+                background: '#16a34a',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#15803d'}
+              onMouseLeave={(e) => e.currentTarget.style.background = '#16a34a'}
+            >
+              📥 Download PDF
+            </button>
+          </div>
         </div>
 
         <div style={{ overflowX: 'auto' }}>

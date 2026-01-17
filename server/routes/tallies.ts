@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "../db";
 import { tallies, otherTallies, tallyHistory, classReasons, performanceReasons } from "../../shared/schema";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and, gte, lte } from "drizzle-orm";
 import { requireAuth } from "../middleware/auth";
 
 const router = Router();
@@ -159,6 +159,33 @@ router.get("/reasons/performance", async (req, res) => {
   } catch (error) {
     console.error("Error fetching performance reasons:", error);
     res.status(500).json({ error: "Failed to fetch performance reasons" });
+  }
+});
+
+router.get("/history", async (req, res) => {
+  try {
+    const { student_id, start_date, end_date, class: className } = req.query;
+    
+    const conditions = [];
+    if (student_id) conditions.push(eq(tallyHistory.studentId, student_id as string));
+    if (className) conditions.push(eq(tallyHistory.class, className as string));
+    if (start_date) conditions.push(gte(tallyHistory.createdAt, new Date(start_date as string)));
+    if (end_date) {
+      const end = new Date(end_date as string);
+      end.setHours(23, 59, 59, 999);
+      conditions.push(lte(tallyHistory.createdAt, end));
+    }
+    
+    let query = db.select().from(tallyHistory);
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+
+    const result = await query;
+    res.json(result);
+  } catch (error) {
+    console.error("Error fetching tally history:", error);
+    res.status(500).json({ error: "Failed to fetch tally history" });
   }
 });
 

@@ -102,6 +102,14 @@ export const api = {
       request<any>('/tallies/other', { method: 'POST', body: JSON.stringify(data) }),
     getClassReasons: () => request<any[]>('/tallies/reasons/class'),
     getPerformanceReasons: () => request<any[]>('/tallies/reasons/performance'),
+    getHistory: (params: { student_id?: string; start_date?: string; end_date?: string; class?: string }) => {
+      const query = new URLSearchParams();
+      if (params.student_id) query.append('student_id', params.student_id);
+      if (params.start_date) query.append('start_date', params.start_date);
+      if (params.end_date) query.append('end_date', params.end_date);
+      if (params.class) query.append('class', params.class);
+      return request<any[]>(`/tallies/history?${query.toString()}`);
+    },
   },
 
   stars: {
