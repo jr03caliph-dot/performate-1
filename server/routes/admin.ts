@@ -10,7 +10,10 @@ import {
   attendance,
   attendanceArchive,
   classes,
-  mentors
+  mentors,
+  tallyHistory,
+  morningBliss,
+  magazineScores
 } from "../../shared/schema";
 import { eq, sql } from "drizzle-orm";
 import { requireAuth } from "../middleware/auth";
@@ -159,6 +162,9 @@ router.post("/reset-monthly", async (req, res) => {
     await db.update(tallies).set({ count: 0, fineAmount: "0" });
     await db.update(stars).set({ count: 0 });
     await db.update(otherTallies).set({ count: 0, fineAmount: "0" });
+    await db.delete(tallyHistory);
+    await db.delete(morningBliss);
+    await db.delete(magazineScores);
 
     res.json({ success: true, message: "Monthly reset completed" });
   } catch (error) {
