@@ -29,38 +29,37 @@ export default function Reports() {
   async function fetchReports() {
     setLoading(true);
     try {
-      const classReports: ClassReport[] = [];
+      const summary = await api.tallies.getHistorySummary({
+        start_date: startDate,
+        end_date: endDate
+      });
 
-      for (const className of activeClasses) {
-        const history = await api.tallies.getHistory({
-          class: className,
-          start_date: startDate,
-          end_date: endDate
-        });
-
-        const totalTallies = history
-          .filter(h => h.type === 'class')
-          .reduce((sum, h) => sum + h.tallyValue, 0);
+      const classReports: ClassReport[] = activeClasses.map(className => {
+        const classSummary = summary.filter(s => s.class === className);
+        
+        const totalTallies = classSummary
+          .filter(s => s.type === 'class')
+          .reduce((sum, s) => sum + Number(s.totalValue), 0);
           
-        const totalOtherTallies = history
-          .filter(h => h.type === 'performance')
-          .reduce((sum, h) => sum + h.tallyValue, 0);
+        const totalOtherTallies = classSummary
+          .filter(s => s.type === 'performance')
+          .reduce((sum, s) => sum + Number(s.totalValue), 0);
           
-        const totalStars = history
-          .filter(h => h.type === 'star')
-          .reduce((sum, h) => sum + Math.abs(h.tallyValue / 2), 0);
+        const totalStars = classSummary
+          .filter(s => s.type === 'star')
+          .reduce((sum, s) => sum + Math.abs(Number(s.totalValue) / 2), 0);
 
         const adjustedTallies = Math.max(0, totalTallies - (totalStars * 2));
         const netFine = (adjustedTallies * 10) + (totalOtherTallies * 10);
 
-        classReports.push({
+        return {
           class: className,
           totalTallies,
           totalStars,
           totalOtherTallies,
           netFine
-        });
-      }
+        };
+      });
 
       setReports(classReports);
     } catch (error) {

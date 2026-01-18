@@ -110,6 +110,12 @@ export const api = {
       if (params.class) query.append('class', params.class);
       return request<any[]>(`/tallies/history?${query.toString()}`);
     },
+    getHistorySummary: (params: { start_date: string; end_date: string }) => {
+      const query = new URLSearchParams();
+      query.append('start_date', params.start_date);
+      query.append('end_date', params.end_date);
+      return request<any[]>(`/tallies/history/summary?${query.toString()}`);
+    },
   },
 
   stars: {

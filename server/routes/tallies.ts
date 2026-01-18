@@ -176,11 +176,39 @@ router.get("/history", async (req, res) => {
       conditions.push(lte(tallyHistory.createdAt, end));
     }
     
-    const result = await db.select().from(tallyHistory).where(and(...(conditions as any)));
+    const result = await db.select().from(tallyHistory).where(and(...(conditions as any[])));
     res.json(result);
   } catch (error) {
     console.error("Error fetching tally history:", error);
     res.status(500).json({ error: "Failed to fetch tally history" });
+  }
+});
+
+router.get("/history/summary", async (req, res) => {
+  try {
+    const { start_date, end_date } = req.query;
+    
+    const conditions = [];
+    if (start_date) conditions.push(gte(tallyHistory.createdAt, new Date(start_date as string)));
+    if (end_date) {
+      const end = new Date(end_date as string);
+      end.setHours(23, 59, 59, 999);
+      conditions.push(lte(tallyHistory.createdAt, end));
+    }
+
+    const result = await db.select({
+      class: tallyHistory.class,
+      type: tallyHistory.type,
+      totalValue: sql<number>`SUM(${tallyHistory.tallyValue})`
+    })
+    .from(tallyHistory)
+    .where(and(...(conditions as any[])))
+    .groupBy(tallyHistory.class, tallyHistory.type);
+
+    res.json(result);
+  } catch (error) {
+    console.error("Error fetching history summary:", error);
+    res.status(500).json({ error: "Failed to fetch history summary" });
   }
 });
 
