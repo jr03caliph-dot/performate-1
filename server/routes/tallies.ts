@@ -176,7 +176,7 @@ router.get("/history", async (req, res) => {
       conditions.push(lte(tallyHistory.createdAt, end));
     }
     
-    const result = await db.select().from(tallyHistory).where(and(...conditions));
+    const result = await db.select().from(tallyHistory).where(and(...(conditions as any)));
     res.json(result);
   } catch (error) {
     console.error("Error fetching tally history:", error);
