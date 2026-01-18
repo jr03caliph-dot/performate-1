@@ -176,7 +176,7 @@ router.get("/history", async (req, res) => {
       conditions.push(lte(tallyHistory.createdAt, end));
     }
     
-    const result = await db.select().from(tallyHistory).where(and(...(conditions as any[])));
+    const result = await db.select().from(tallyHistory).where(and(...(conditions as any)));
     res.json(result);
   } catch (error) {
     console.error("Error fetching tally history:", error);
@@ -202,7 +202,7 @@ router.get("/history/summary", async (req, res) => {
       totalValue: sql<number>`SUM(${tallyHistory.tallyValue})`
     })
     .from(tallyHistory)
-    .where(and(...(conditions as any[])))
+    .where(and(...(conditions as any)))
     .groupBy(tallyHistory.class, tallyHistory.type);
 
     res.json(result);

@@ -55,6 +55,8 @@ router.post("/", async (req, res) => {
     }
 
     if (reason && className && mentor_short_form) {
+      // Store star as 1 unit in history, let report handle multiplier if needed
+      // but consistent with tallyValue being the absolute count
       await db.insert(tallyHistory).values({
         studentId: student_id,
         class: className,
@@ -62,7 +64,7 @@ router.post("/", async (req, res) => {
         mentorShortForm: mentor_short_form,
         type: 'star',
         reason,
-        tallyValue: -count * 2,
+        tallyValue: count, // Just store the count
       });
     }
 
