@@ -47,7 +47,7 @@ export default function Reports() {
           
         const totalStars = classSummary
           .filter(s => s.type === 'star')
-          .reduce((sum, s) => sum + Number(s.totalValue), 0);
+          .reduce((sum, s) => sum + Math.abs(Number(s.totalValue || 0)), 0);
 
         const adjustedTallies = Math.max(0, totalTallies - (totalStars * 2));
         const netFine = (adjustedTallies * 10) + (totalOtherTallies * 10);

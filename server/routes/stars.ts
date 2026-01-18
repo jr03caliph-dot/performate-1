@@ -62,7 +62,7 @@ router.post("/", async (req, res) => {
         mentorShortForm: mentor_short_form,
         type: 'star',
         reason,
-        tallyValue: count,
+        tallyValue: Number(count),
       });
     }
 
